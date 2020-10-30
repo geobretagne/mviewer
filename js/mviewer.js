@@ -1865,18 +1865,18 @@ mviewer = (function () {
         /**
          * Reorder layers according to layer rank define by xml config file input (not by position or toplayer)
          */
-        showLayersByXmlOrder: function() {
-            // order map layers
-            var layers = mviewer.getLayers();
+        showLayersByAttrOrder: function(layers, reverse) {
             // to keep baseLayer as first map layers
             var baseLayersCount = configuration.getConfiguration().baselayers.baselayer.length;
-
-            Object.keys(layers).forEach(id => {
-                var xmlOrder = layers[id].rank + baseLayersCount;
+            var ids = Object.keys(layers);
+            ids = reverse ? ids.reverse() : ids;
+            ids.forEach((id, pos) => {
+                var order = layers[id] || pos + baseLayersCount;
                 var layer = _map.getLayers().getArray().filter(mapLayer => mapLayer.getProperties().mviewerid === id);
-                if(layer.length) mviewer.reorderLayer(layer[0], xmlOrder);
+                if(layer.length) mviewer.reorderLayer(layer[0], order);
             })
             // now, order legend items according to map layers order
+            mviewer.orderTopLayer();
             mviewer.orderLegendByMap();
         },
 
@@ -1922,6 +1922,57 @@ mviewer = (function () {
                 // get map position
                 mviewer.setLegendLayerPos(legendLayerId, mapLayers.indexOf(legendLayerId));
             })
+        },
+
+        getLayersAttribute: function(attr) {
+            if(!attr) return;
+            var mLayers = Object.keys(mviewer.getLayers());
+            mLayers = mLayers.map(m => [m, mviewer.getLayers()[m][attr]]);
+            return Object.fromEntries(mLayers);
+        },
+
+        orderLayerByIndex: function() {
+            var layersIndex = mviewer.getLayersAttribute('index');
+            var ids = Object.keys(layersIndex);
+            var newOrder = [];
+            // list by index
+            ids.forEach((id, position) => {
+                console.log(id);
+                if(layersIndex[id]) {
+                    newOrder[layersIndex[id]] = id;
+                }
+            })
+            // clean array
+            
+            // now we search null index position according to xml
+            var rankLayers = mviewer.getLayersAttribute('rank');
+            Object.keys(rankLayers).forEach(id => {
+                if(newOrder.indexOf(id)<0) {
+                    // we define order according to xml order
+                    newOrder.push(id);
+                }
+            })
+            newOrder = newOrder.filter(item => item) // remove null or undefined
+            newOrder = newOrder.map(id => [id,null]); // to keep order of this array
+            mviewer.showLayersByAttrOrder(Object.fromEntries(newOrder),true);
+        },
+
+
+        orderTopLayer: function() {
+            if(_topLayer) {
+                var layersId = _map.getLayers().getArray().filter(e => e.getProperties().mviewerid === _topLayer);
+                if(!layersId.length) return; // no top layer to display
+
+                // count base layers
+                var countLayers = configuration.getConfiguration().baselayers.baselayer.length;
+                // count themes layers
+                var themes = configuration.getConfiguration().themes.theme;
+                themes.forEach(e => {
+                    countLayers += e.layer.length
+                });
+                // set first layer over others theme or background layers and before system layers
+                mviewer.reorderLayer(layersId[0], countLayers-1);
+            }
         },
 
         /**
