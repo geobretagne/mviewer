@@ -1861,6 +1861,69 @@ mviewer = (function () {
                 _map.render();
             }
         },
+
+        /**
+         * Reorder layers according to layer rank define by xml config file input (not by position or toplayer)
+         */
+        showLayersByXmlOrder: function() {
+            // order map layers
+            var layers = mviewer.getLayers();
+            // to keep baseLayer as first map layers
+            var baseLayersCount = configuration.getConfiguration().baselayers.baselayer.length;
+
+            Object.keys(layers).forEach(id => {
+                var xmlOrder = layers[id].rank + baseLayersCount;
+                var layer = _map.getLayers().getArray().filter(mapLayer => mapLayer.getProperties().mviewerid === id);
+                if(layer.length) mviewer.reorderLayer(layer[0], xmlOrder);
+            })
+            // now, order legend items according to map layers order
+            mviewer.orderLegendByMap();
+        },
+
+        /**
+         * Find layer into legend and set new legend position according to map visibility
+         * @param {String} layerId 
+         * @param {Number} position 
+         */
+        setLegendLayerPos: function(layerId, position) {
+            if(layerId) {
+                var legendItem = $(`#layers-container>li[data-layerid="${layerId}"]`);
+                // change layer position into legend
+                switch(position) {
+                    case 0:
+                        // first element
+                        $('#layers-container').prepend(legendItem);
+                        break;
+                    default:
+                        // others
+                        legendItem.insertBefore($(`#layers-container li:eq(${position})`));
+                        break;
+                }
+            }
+        },
+
+        /**
+         * Order layers according to map layers order and visibility
+         */
+        orderLegendByMap: function() {
+            var mviewerLayersId = Object.keys(mviewer.getLayers());
+            var mapLayers = mviewer.getMap().getLayers().getArray();
+            // get mapLayers and remove them from layers order
+            var countBaseLayers = configuration.getConfiguration().baselayers.baselayer.length;
+            mapLayers = mapLayers.slice(countBaseLayers);
+            // to only get visible layers and layers from themes
+            mapLayers = mapLayers.filter(layer => layer.getVisible() && mviewerLayersId.indexOf(layer.getProperties().mviewerid)>-1);
+            // only keep id and reverse to get order as we need on map
+            mapLayers = mapLayers.map(layer => layer.getProperties().mviewerid).reverse();
+            // now, we could order legend by map layers
+            $(`#layers-container>li[data-layerid]`).each((i,li)=> {
+                // get legend element
+                var legendLayerId = $(li).attr('data-layerid');
+                // get map position
+                mviewer.setLegendLayerPos(legendLayerId, mapLayers.indexOf(legendLayerId));
+            })
+        },
+
         /**
          * Public Method: openStudio
          */
