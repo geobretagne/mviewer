@@ -1942,6 +1942,7 @@ mviewer = (function () {
         orderLayerByIndex: function() {
             var layersIndex = mviewer.getLayersAttribute('index');
             var ids = Object.keys(layersIndex);
+            if(!ids.filter(id => layersIndex[id]).length) return;
             var newOrder = [];
             // list by index
             ids.forEach((id, position) => {
@@ -1952,17 +1953,18 @@ mviewer = (function () {
             
             // now we search null index position according to xml
             var rankLayers = mviewer.getLayersAttribute('rank');
+            var ranksOrder = [];
             Object.keys(rankLayers).forEach(id => {
                 if(newOrder.indexOf(id)<0) {
                     // we define order according to xml order
-                    newOrder.push(id);
+                    ranksOrder[rankLayers[id]] = id;
                 }
             })
+            newOrder = newOrder.concat(ranksOrder.reverse());
             newOrder = newOrder.filter(item => item) // remove null or undefined
             newOrder = newOrder.map(id => [id,null]); // to keep order of this array
             mviewer.showLayersByAttrOrder(Object.fromEntries(newOrder),true);
         },
-
 
         /**
          * Get toplayer according to xml order and pass all top layer to the top
@@ -1995,7 +1997,7 @@ mviewer = (function () {
          * @param {Boolean} visible if you search visible or hidden layer
          * @return {ol.layer} layer
          */
-        getMapLayer: function(id, visible = null) {
+        getMapLayer: function(id, visible=null) {
             var layer = _map.getLayers().getArray().filter(e => e.getProperties().mviewerid === id);
             if(visible != null) {
                 layer.filter(lyr => lyr.getVisible() === visible);
