@@ -942,54 +942,8 @@ var configuration = (function () {
         }
     };
 
-    /**
-     * Return index for a specific layer id
-     * @param {String} id mviewer layer id
-     */
-    var _getLayerIndex = function(id) {
-        if(!id) return;
-        var index = null;
-        configuration.getConfiguration().themes.theme.forEach(theme => {
-            var layer = theme.layer.filter(layer => layer.id === id);
-            index = layer.length ? layer[0].index : null;
-        })
-        return index;
-    }
-
-    /**
-     * Get index for each mviewer layers
-     * @return {Object} allIndex - all index by layer
-     */
-    var _getIndexByLayers = function() {
-        var allIndex = {};
-        // layers by theme
-        var layers = [];
-        configuration.getConfiguration().themes.theme.forEach(theme => {
-            layers = layers.concat(theme.layer);
-        })
-        // index by layer
-        layers.forEach(layer => {
-            allIndex[layer.id] = layer.index || null;
-        })
-        return allIndex;
-    }
-
-    /**
-     * Return all top layers
-     */
-    var _getTopLayers = function() {
-        var topLayers = [];
-        configuration.getConfiguration().themes.theme.forEach(theme => {
-            topLayers = topLayers.concat(theme.layer.filter(layer => layer.toplayer));
-        })
-        return topLayers;
-    }
-
     return {
         parseXML: _parseXML,
-        getTopLayers: _getTopLayers,
-        getIndexByLayers: _getIndexByLayers,
-        getLayerIndex: _getLayerIndex,
         getExtensions: _getExtensions,
         load: _load,
         complete: _complete,
