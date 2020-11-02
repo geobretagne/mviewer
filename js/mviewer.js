@@ -1836,7 +1836,7 @@ mviewer = (function () {
             var oldIndex = layers.indexOf(layer);
             layers.splice(newIndex, 0, layers.splice(oldIndex, 1)[0]);
             _map.render();
-
+            mviewer.orderLegendByMap();
         },
 
         orderLayer: function (actionMove) {
@@ -1863,7 +1863,8 @@ mviewer = (function () {
         },
 
         /**
-         * Reorder layers according to layer rank define by xml config file input (not by position or toplayer)
+         * Reorder layers according to layer rank.
+         * Rank is define by xml config file input (not by index or toplayer)
          */
         showLayersByAttrOrder: function(layers, reverse) {
             // to keep baseLayer as first map layers
@@ -1924,6 +1925,10 @@ mviewer = (function () {
             })
         },
 
+        /**
+         * Return object to identify a given attribute value for each layer
+         * @param {String} attr 
+         */
         getLayersAttribute: function(attr) {
             if(!attr) return;
             var mLayers = Object.keys(mviewer.getLayers());
@@ -1931,18 +1936,19 @@ mviewer = (function () {
             return Object.fromEntries(mLayers);
         },
 
+        /**
+         * Get index param for each layer and order layers according to layer's index
+         */
         orderLayerByIndex: function() {
             var layersIndex = mviewer.getLayersAttribute('index');
             var ids = Object.keys(layersIndex);
             var newOrder = [];
             // list by index
             ids.forEach((id, position) => {
-                console.log(id);
                 if(layersIndex[id]) {
                     newOrder[layersIndex[id]] = id;
                 }
             })
-            // clean array
             
             // now we search null index position according to xml
             var rankLayers = mviewer.getLayersAttribute('rank');
@@ -1958,21 +1964,44 @@ mviewer = (function () {
         },
 
 
+        /**
+         * Get toplayer according to xml order and pass all top layer to the top
+         */
         orderTopLayer: function() {
-            if(_topLayer) {
-                var layersId = _map.getLayers().getArray().filter(e => e.getProperties().mviewerid === _topLayer);
-                if(!layersId.length) return; // no top layer to display
+            var topLayers = mviewer.getLayersAttribute('toplayer');
+            var topLayersId = Object.keys(topLayers).filter(lyr => topLayers[lyr]);
+            if(!topLayersId.length) return;
 
-                // count base layers
-                var countLayers = configuration.getConfiguration().baselayers.baselayer.length;
-                // count themes layers
-                var themes = configuration.getConfiguration().themes.theme;
-                themes.forEach(e => {
-                    countLayers += e.layer.length
-                });
+            // count base layers
+            var countLayers = configuration.getConfiguration().baselayers.baselayer.length;
+            // count themes layers
+            var themes = configuration.getConfiguration().themes.theme;
+            themes.forEach(e => {
+                countLayers += e.layer.length
+            });
+
+            topLayersId.forEach(id => {
+                var layer = mviewer.getMapLayer(id);
+                if(!layer) return; // no top layer to display
+
                 // set first layer over others theme or background layers and before system layers
-                mviewer.reorderLayer(layersId[0], countLayers-1);
+                mviewer.reorderLayer(layer, countLayers-1);
+            })
+        },
+
+        /**
+         * Return searched map layer
+         * @param {String} id 
+         * @param {Boolean} visible if you search visible or hidden layer
+         * @return {ol.layer} layer
+         */
+        getMapLayer: function(id, visible = null) {
+            var layer = _map.getLayers().getArray().filter(e => e.getProperties().mviewerid === id);
+            if(visible != null) {
+                layer.filter(lyr => lyr.getVisible() === visible);
             }
+            if(!layer) return null;
+            return layer[0];
         },
 
         /**
@@ -2220,7 +2249,6 @@ mviewer = (function () {
          */
 
         sendToGeorchestra: function () {
-            console.log("test");
             var params = {
                 "services": [],
                 "layers" : []
