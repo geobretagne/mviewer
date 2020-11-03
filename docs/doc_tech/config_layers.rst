@@ -68,7 +68,8 @@ Configurer - Les couches
                 tooltipenabled=""
                 expanded=""
                 metadata=""
-                metadata-csw="" >
+                metadata-csw="" 
+                index="">
                 <template url=""></template>
         </layer>
 
@@ -83,6 +84,7 @@ Paramètres pour une configuration minimaliste
 Paramètres pour gérer l'affichage de la couche
 ===================================================
 
+* ``index``: Ordre d'affichage de la couche sur la carte et dans la légende au démarrage
 * ``scalemin`` :guilabel:`studio` : Échelle minimum de la couche
 * ``scalemax`` :guilabel:`studio` : Échelle maximum de la couche
 * ``dynamiclegend`` : Booléen précisant si la légende est liée à l'échelle de la carte et si elle nécessite d'être actualisée à chaque changement d'échelle de la carte.
