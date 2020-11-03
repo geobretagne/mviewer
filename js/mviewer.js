@@ -1983,27 +1983,12 @@ mviewer = (function () {
             });
 
             topLayersId.forEach(id => {
-                var layer = mviewer.getMapLayer(id);
+                var layer = mviewer.getLayer(id).layer;
                 if(!layer) return; // no top layer to display
 
                 // set first layer over others theme or background layers and before system layers
                 mviewer.reorderLayer(layer, countLayers-1);
             })
-        },
-
-        /**
-         * Return searched map layer
-         * @param {String} id 
-         * @param {Boolean} visible if you search visible or hidden layer
-         * @return {ol.layer} layer
-         */
-        getMapLayer: function(id, visible=null) {
-            var layer = _map.getLayers().getArray().filter(e => e.getProperties().mviewerid === id);
-            if(visible != null) {
-                layer.filter(lyr => lyr.getVisible() === visible);
-            }
-            if(!layer) return null;
-            return layer[0];
         },
 
         /**
