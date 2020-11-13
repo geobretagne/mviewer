@@ -1872,7 +1872,7 @@ mviewer = (function () {
             var ids = Object.keys(layers);
             ids = reverse ? ids.reverse() : ids;
             ids.forEach((id, pos) => {
-                var order = layers[id] || pos + baseLayersCount;
+                var order = (layers[id] || pos) + baseLayersCount;
                 var layer = _map.getLayers().getArray().filter(mapLayer => mapLayer.getProperties().mviewerid === id);
                 if(layer.length) mviewer.reorderLayer(layer[0], order);
             })
@@ -1971,7 +1971,7 @@ mviewer = (function () {
          */
         orderTopLayer: function() {
             var topLayers = mviewer.getLayersAttribute('toplayer');
-            var topLayersId = Object.keys(topLayers).filter(lyr => topLayers[lyr]);
+            var topLayersId = Object.keys(topLayers).filter(lyr => topLayers[lyr]).reverse();
             if(!topLayersId.length) return;
 
             // count base layers
@@ -1979,13 +1979,18 @@ mviewer = (function () {
             // count themes layers
             var themes = configuration.getConfiguration().themes.theme;
             themes.forEach(e => {
-                countLayers += e.layer.length
+                if(e.group && e.group.length) {
+                    countLayers += e.group.map(d => d.layer.length).reduce((a, b) => a + b, 0);
+                }
+                if(e.layer && e.layer.length) {
+                    countLayers += e.layer.length;
+                }
             });
 
             topLayersId.forEach(id => {
                 var layer = mviewer.getLayer(id).layer;
                 if(!layer) return; // no top layer to display
-
+                
                 // set first layer over others theme or background layers and before system layers
                 mviewer.reorderLayer(layer, countLayers-1);
             })
@@ -2599,6 +2604,8 @@ mviewer = (function () {
                 var newStatus = _getThemeStatus(layer.theme);
                 _setThemeStatus(layer.theme, newStatus);
             }
+            mviewer.orderTopLayer();
+            mviewer.orderLegendByMap();
         },
         removeLayer: function (el) {
             var item;
