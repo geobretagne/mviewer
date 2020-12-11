@@ -1,5 +1,7 @@
 var info = (function () {
 
+    var test = 0;
+
     /**
      * Property: _map
      *  @type {ol.Map}
