@@ -531,6 +531,8 @@
                 success: function (xml) {
                     $( document ).on( "layersLoaded", function (e) {
                         mviewer.overLayersReady();
+                        mviewer.showLayersByAttrOrder(mviewer.getLayersAttribute('rank'));
+                        mviewer.orderLayerByIndex();
                     });
                     //load conf
                     $( document ).on( "configurationCompleted", function (e, eData) {
@@ -582,6 +584,7 @@
             Sortable.create(document.getElementById('layers-container'), {
                 handle: '.layerdisplay-title',
                 draggable: '.draggable',
+                filter: '.toplayer',
                 onUpdate: function (evt) {
                     var actionMove = {
                         layerName: $(evt.item).attr("data-layerid"),
